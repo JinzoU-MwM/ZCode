@@ -1,81 +1,81 @@
-# ZCode 插件商店（Plugin Store）
+# ZCode Plugin Store
 
-插件设置页及其市场浏览/安装体验的领域词汇表。本文件统一定义商店相关术语，供页面、服务和文档使用。
+Domain glossary for the plugin settings page and its marketplace browsing/installation experience. This file is the single definition of store-related terminology, for use by pages, services, and documentation.
 
 ## Language
 
-### 市场与来源
+### Marketplaces and Sources
 
-**Official Marketplace（官方市场）**:
-ZCode 官方运营的唯一分发渠道，市场 id 为 `zcode-plugins-official`，内容 = 内置插件 + CDN 插件。是"分发渠道"而非"作者归属"——其中可以收录社区作者的插件。
-_Avoid_: "官方"泛指一切受信市场
+**Official Marketplace**:
+The sole distribution channel operated by ZCode itself; its marketplace id is `zcode-plugins-official`, and its contents = builtin plugins + CDN plugins. It is a "distribution channel", not an "authorship attribution" — it can include plugins by community authors.
+_Avoid_: using "official" loosely for any trusted marketplace
 
-**Builtin Plugin（内置插件）**:
-随应用包一起分发、启动时播种进官方市场的插件。是官方插件的子集。
-_Avoid_: 预装插件、bundled plugin（口语可用，文档统一"内置"）
+**Builtin Plugin**:
+A plugin shipped with the application bundle and seeded into the Official Marketplace at startup. A subset of official plugins.
+_Avoid_: pre-installed plugin, bundled plugin (fine in conversation; documentation consistently uses "builtin")
 
-**CDN Plugin（CDN 插件）**:
-官方市场中通过官方 CDN 以 sha256 校验的 zip 包分发、按需下载安装的插件。
-_Avoid_: 网络插件、在线插件
+**CDN Plugin**:
+A plugin in the Official Marketplace distributed through the official CDN as a sha256-verified zip package, downloaded and installed on demand.
+_Avoid_: network plugin, online plugin
 
-**Personal Source（个人来源）**:
-用户自行添加的一切插件来源：git/GitHub/URL/本地目录市场、inline 插件。
-_Avoid_: 无
+**Personal Source**:
+Any plugin source added by the user themselves: git/GitHub/URL/local-directory marketplaces, inline plugins.
+_Avoid_: none
 
-**Catalog Auto-Refresh（目录自动刷新）**:
-进入商店页时对 Official Marketplace 目录的节流后台刷新，用户无感知；只覆盖官方市场。
-_Avoid_: 与 Manual Refresh 混用；把它称作"检查更新"（更新角标只是刷新的副产物）
+**Catalog Auto-Refresh**:
+A throttled background refresh of the Official Marketplace catalog when entering the store page, invisible to the user; covers only the Official Marketplace.
+_Avoid_: conflating it with Manual Refresh; calling it "check for updates" (the update badge is merely a by-product of the refresh)
 
-**Manual Refresh（手动刷新）**:
-商店页顶栏刷新按钮触发的全市场刷新，不受自动刷新节流影响。
-_Avoid_: 刷新、检查更新（口语可用，文档统一"手动刷新"）
+**Manual Refresh**:
+A refresh of all marketplaces triggered by the refresh button in the store page's top bar, not subject to the auto-refresh throttle.
+_Avoid_: refresh, check for updates (fine in conversation; documentation consistently uses "manual refresh")
 
-### 商店页结构
+### Store Page Structure
 
-**Public Segment（公开）**:
-商店列表页的分段之一，展示且仅展示官方市场的目录（Featured + 分类区块）。
-_Avoid_: 官方 tab、商店 tab
+**Public Segment**:
+One of the segments of the store list page; shows the Official Marketplace catalog and nothing else (Featured + category sections).
+_Avoid_: official tab, store tab
 
-**Personal Segment（个人）**:
-商店列表页的另一分段，展示全部个人来源的目录，按市场分组。
-_Avoid_: 第三方 tab、我的 tab
+**Personal Segment**:
+The other segment of the store list page; shows the catalogs of all Personal Sources, grouped by marketplace.
+_Avoid_: third-party tab, my tab
 
-**Featured（精选）**:
-公开分段顶部的策展区，名单由官方 CDN 目录的 `featured` 字段远程控制。仅存在于公开分段。
-_Avoid_: 与 Recommended 混用
+**Featured**:
+The curated area at the top of the Public Segment; its list is remotely controlled by the `featured` field of the official CDN catalog. Exists only in the Public Segment.
+_Avoid_: conflating it with Recommended
 
-**Installed Strip（已安装条）**:
-列表页顶部的一排已安装插件图标，点击图标进入详情页。
-_Avoid_: 已安装列表（那是 Manage Installed 视图的事）
+**Installed Strip**:
+A row of installed plugin icons at the top of the list page; clicking an icon opens the detail page.
+_Avoid_: installed list (that belongs to the Manage Installed view)
 
-**Manage Installed View（管理已安装视图）**:
-已安装条右侧齿轮进入的管理界面，承载插件级启停开关、更新、卸载、启用状态筛选。
-_Avoid_: Installed tab（旧 IA 术语，已废弃）
+**Manage Installed View**:
+The management interface entered via the gear to the right of the Installed Strip; hosts plugin-level enable/disable toggles, updates, uninstall, and filtering by enabled state.
+_Avoid_: Installed tab (old IA term, deprecated)
 
-### 元数据
+### Metadata
 
-**Store Listing（商店信息）**:
-目录条目携带的展示性元数据：显示名、icon、分类、开发者、网站/隐私政策/服务条款链接、hero 图、示例提示词。描述"如何在商店里呈现"，不影响插件功能。
-_Avoid_: 插件元数据（含糊，可能指 manifest）
+**Store Listing**:
+Presentational metadata carried by a catalog entry: display name, icon, category, developer, website/privacy policy/terms of service links, hero image, example prompts. Describes "how it is presented in the store" and does not affect plugin functionality.
+_Avoid_: plugin metadata (ambiguous; may refer to the manifest)
 
-**Plugin Manifest（插件清单）**:
-插件包内 `plugin.json` 的功能性定义（commands/agents/skills/hooks/mcpServers/userConfig…）。描述"插件是什么、做什么"。
-_Avoid_: marketplace.json（那是目录，不是清单）
+**Plugin Manifest**:
+The functional definition in the plugin package's `plugin.json` (commands/agents/skills/hooks/mcpServers/userConfig…). Describes "what the plugin is and what it does".
+_Avoid_: marketplace.json (that is the catalog, not the manifest)
 
-**Example Prompt（示例提示词）**:
-Store Listing 提供的可点击提示词，点击后新建会话并预填（不自动发送）。是详情页唯一的"新建会话"入口。
-_Avoid_: 快捷指令、prompt 模板、立即试用
+**Example Prompt**:
+A clickable prompt provided by the Store Listing; clicking it creates a new session and pre-fills the prompt (not sent automatically). It is the only "new session" entry point on the detail page.
+_Avoid_: quick command, prompt template, try it now
 
-### 生命周期状态
+### Lifecycle States
 
-**Plugin Lifecycle（插件生命周期）**:
-用户从发现插件开始，经过查看、安装、配置、启停、使用、检查更新、升级、持久化恢复，直到卸载或恢复内置插件的完整产品路径。每个阶段都必须同时验证可见 UI 状态和对应的持久化或运行时结果。
-_Avoid_: 仅把“安装成功”称为完整生命周期
+**Plugin Lifecycle**:
+The complete product path from the user discovering a plugin, through viewing, installing, configuring, enabling/disabling, using, checking for updates, upgrading, and persistence recovery, until uninstalling or restoring a builtin plugin. Every stage must verify both the visible UI state and the corresponding persisted or runtime result.
+_Avoid_: treating "installed successfully" alone as the complete lifecycle
 
-**Restorable Builtin（可恢复内置插件）**:
-被用户卸载并进入持久化抑制状态的 Builtin Plugin。应用重启不得自动重新播种；它继续出现在 Public Segment，并通过“安装”入口执行干净恢复。
-_Avoid_: 未安装 CDN 插件、临时禁用的内置插件
+**Restorable Builtin**:
+A Builtin Plugin that the user has uninstalled and that has entered a persisted suppressed state. An app restart must not automatically re-seed it; it continues to appear in the Public Segment and is cleanly restored through the "Install" entry point.
+_Avoid_: uninstalled CDN plugin, temporarily disabled builtin plugin
 
-**Orphaned Installed Plugin（孤立已安装插件）**:
-对应 Personal Source 已被删除、但安装目录和用户数据仍保留的插件。它仍可使用、配置、启停和卸载；来源重新添加前不能更新，重新添加同一来源后恢复目录关联。
-_Avoid_: 安装损坏、manifest 缺失、已卸载插件
+**Orphaned Installed Plugin**:
+A plugin whose corresponding Personal Source has been removed while its install directory and user data remain. It can still be used, configured, enabled/disabled, and uninstalled; it cannot be updated until the source is re-added, and re-adding the same source restores the catalog association.
+_Avoid_: broken install, missing manifest, uninstalled plugin
