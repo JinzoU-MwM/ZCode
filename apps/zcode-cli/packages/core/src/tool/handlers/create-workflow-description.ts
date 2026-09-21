@@ -93,11 +93,6 @@ const NAMES = [
   "- A name is also an identity: it must be unique within the run, and a revised re-run matches its cached results by it. Keep names stable across revisions of the same script, and give duplicates in a loop their own computed names (see the facade).",
 ].join("\n");
 
-// facade 声明与写作规则不再进描述：它们约 8k token，随每次 provider request 的前缀发送，
-// 而绝大多数 turn 不写工作流。改由 WorkflowReference 工具按需返回同一份文本。
-const REFERENCE_POINTER =
-  "Before writing or revising a script in this session, call WorkflowReference once: it returns the facade declarations the script is typechecked against and the authoring rules (language restrictions, phases, subagent naming). Scripts written without reading it usually fail typechecking.";
-
 export const CREATE_WORKFLOW_TOOL_DESCRIPTION = [
   INTRO,
   "",
@@ -105,12 +100,7 @@ export const CREATE_WORKFLOW_TOOL_DESCRIPTION = [
   "",
   WHEN_TO_USE,
   "",
-  REFERENCE_POINTER,
-].join("\n");
-
-/** WorkflowReference 返回的正文：与旧描述逐字相同的 facade + 规则段。 */
-export const WORKFLOW_AUTHORING_REFERENCE = [
-  "A workflow script is checked against these facade declarations:",
+  "The script is checked against these facade declarations:",
   "```ts",
   FACADE_DTS.trim(),
   "```",

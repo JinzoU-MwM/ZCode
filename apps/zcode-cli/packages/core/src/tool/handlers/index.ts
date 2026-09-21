@@ -12,7 +12,6 @@ import {
   LIST_WORKFLOW_RUNS_TOOL_NAME,
   RESOLVE_WORKFLOW_QUESTION_TOOL_NAME,
   RESUME_WORKFLOW_RUN_TOOL_NAME,
-  WORKFLOW_REFERENCE_TOOL_NAME,
   SAVE_WORKFLOW_TOOL_NAME,
   SUBMIT_RESULT_TOOL_NAME,
   type JsonSchema,
@@ -63,7 +62,6 @@ import { amendWorkflowToolEntry } from "./amend-workflow.js";
 import { createWorkflowToolEntry } from "./create-workflow.js";
 import { saveWorkflowToolEntry } from "./save-workflow.js";
 import { listSavedWorkflowsToolEntry } from "./list-saved-workflows.js";
-import { workflowReferenceToolEntry } from "./workflow-reference.js";
 import { listModelsToolEntry } from "./list-models.js";
 import { evalWorkflowSnippetToolEntry } from "./eval-workflow-snippet.js";
 import { listWorkflowRunsToolEntry } from "./list-workflow-runs.js";
@@ -131,8 +129,6 @@ export const builtInTools: ToolEntry[] = [
   resolveWorkflowQuestionToolEntry,
   // 定义清单（与上面两个 run 工具是两件事：那是历史，这是可跑的东西）。同为只读、无 gate。
   listSavedWorkflowsToolEntry,
-  // facade 声明与写作规则的按需入口；随灰度门一起上下架。
-  workflowReferenceToolEntry,
   // 模型目录：同为只读、无 gate 的发现面，服务于 CreateWorkflow / AmendWorkflow 的
   // `subagent_model`。不进 WORKFLOW_CHILD_DISALLOWED_TOOLS
   // ——那条禁令的理由是 alwaysAsk 在 child 里无窗可弹，只读查询不适用。
@@ -158,7 +154,6 @@ const DYNAMIC_WORKFLOW_TOOL_NAMES: ReadonlySet<string> = new Set([
   GET_WORKFLOW_RUN_TOOL_NAME,
   RESUME_WORKFLOW_RUN_TOOL_NAME,
   RESOLVE_WORKFLOW_QUESTION_TOOL_NAME,
-  WORKFLOW_REFERENCE_TOOL_NAME,
 ]);
 
 interface RegisterBuiltInToolsOptions {

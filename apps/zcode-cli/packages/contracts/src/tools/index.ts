@@ -37,7 +37,6 @@ export * from "./amend-workflow.js";
 export * from "./saved-workflow.js";
 export * from "./save-workflow.js";
 export * from "./list-saved-workflows.js";
-export * from "./workflow-reference.js";
 // dwf 选型的发现面：名字常量被 core 的工具注册与
 // bootstrap 的 actor 禁用名单读走，漏掉这行消费方拿不到 schema 与 LIST_MODELS_TOOL_NAME。
 export * from "./list-models.js";

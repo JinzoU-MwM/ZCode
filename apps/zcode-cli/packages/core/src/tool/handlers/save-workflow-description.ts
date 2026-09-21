@@ -59,9 +59,9 @@ export const SAVE_WORKFLOW_TOOL_DESCRIPTION = [
   "",
   ARGS,
   "",
-  // facade 声明不进描述（约 5.6k token 会进入每一次 provider request 的前缀）；
-  // 与 CreateWorkflow 同一灰度门下的 WorkflowReference 按需返回。
-  "The script is checked against the facade declarations returned by WorkflowReference; call it before writing the script.",
+  // facade 声明只在 CreateWorkflow 描述里出现一次：两个工具同一灰度门下总是同时注册，
+  // 这里重复一份约 5.6k token 会进入每一次 provider request 的前缀。
+  "The script is checked against the same facade declarations shown in the CreateWorkflow tool description; they are not repeated here.",
   "",
   RULES,
 ].join("\n");
