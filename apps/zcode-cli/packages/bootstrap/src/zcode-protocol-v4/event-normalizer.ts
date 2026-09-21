@@ -431,6 +431,7 @@ function userInputOrigin(
     case "plugin_reference":
     case "rewind":
     case "todo_reminder":
+    case "runtime_reminder":
       return "synthetic";
     // 中枢直接启动：用户在中枢里的真实动作，可见 user row 但以启动卡呈现（origin 区分它与普通气泡）。
     case "workflow_launch":

@@ -10,6 +10,7 @@ import type { AgentRuntimeInternal } from "../internal.js";
 import type { RegularTurnLoopState } from "./turn-loop-state.js";
 import { systemReminderAttachmentEntry } from "../../agent/message-history.js";
 import { commitTurnRequestEntries } from "./turn-output-token-continuation.js";
+import { persistRuntimeReminderNotice } from "./runtime-reminder-persistence.js";
 
 export async function handleToolCallAnomalyWarnings(
   runtime: AgentRuntimeInternal,
@@ -27,12 +28,11 @@ export async function handleToolCallAnomalyWarnings(
   );
   if (budgetWarning) {
     if (budgetWarning.warningInjected) {
+      const body = buildToolCallBudgetReminderBody(budgetWarning.observedCount);
       commitTurnRequestEntries(runtime, state.turnRequestState, [
-        systemReminderAttachmentEntry(
-          "model_anomaly",
-          buildToolCallBudgetReminderBody(budgetWarning.observedCount),
-        ),
+        systemReminderAttachmentEntry("model_anomaly", body),
       ]);
+      await persistRuntimeReminderNotice(runtime, "model_anomaly", body, options.modelTraceContext);
     }
     const warningEvent = runtime.createEvent(
       SessionEventType.ModelAnomalyWarning,
@@ -56,12 +56,11 @@ export async function handleToolCallAnomalyWarnings(
   );
   for (const warning of repeatedWarnings) {
     if (warning.warningInjected) {
+      const body = buildRepeatedToolCallReminderBody(warning.toolName, warning.observedCount);
       commitTurnRequestEntries(runtime, state.turnRequestState, [
-        systemReminderAttachmentEntry(
-          "model_anomaly",
-          buildRepeatedToolCallReminderBody(warning.toolName, warning.observedCount),
-        ),
+        systemReminderAttachmentEntry("model_anomaly", body),
       ]);
+      await persistRuntimeReminderNotice(runtime, "model_anomaly", body, options.modelTraceContext);
     }
     const warningEvent = runtime.createEvent(
       SessionEventType.ModelAnomalyWarning,

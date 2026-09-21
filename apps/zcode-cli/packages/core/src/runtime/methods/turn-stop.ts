@@ -207,9 +207,10 @@ export async function finishModelStepWithoutToolCalls(
   );
   if (this.shouldContinueAfterStopHooks(stopHookResult, state.stopHookContinuationCount)) {
     state.stopHookContinuationCount += 1;
-    const hookEntry = this.injectHookAdditionalContextIntoMessageHistory(
+    const hookEntry = await this.injectHookAdditionalContextIntoMessageHistory(
       HookEventName.Stop,
       stopHookResult.additionalContexts,
+      state.turnTraceContext,
     );
     appendTurnRequestEntries(state.turnRequestState, hookEntry ? [hookEntry] : []);
     state.turnMachine = new TurnMachineImpl(state.turnMachine.aggregateResults());

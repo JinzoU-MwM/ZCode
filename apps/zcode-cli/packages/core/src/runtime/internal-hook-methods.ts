@@ -27,6 +27,7 @@ export interface AgentRuntimeHookMethods {
   injectHookAdditionalContextIntoMessageHistory(
     eventName: HookEventName,
     additionalContexts: readonly string[],
-  ): RuntimeMessageEntry | undefined;
+    traceContext?: TraceContext,
+  ): Promise<RuntimeMessageEntry | undefined>;
   shouldContinueAfterStopHooks(result: HookRunResult, continuationCount: number): boolean;
 }

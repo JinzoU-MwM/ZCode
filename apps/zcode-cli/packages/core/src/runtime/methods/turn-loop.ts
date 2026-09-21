@@ -24,6 +24,7 @@ import {
 } from "../../agent/message-history.js";
 import type { AgentRuntimeInternal } from "../internal.js";
 import { runModelBackedTurnStep } from "./turn-model-step.js";
+import { persistRuntimeReminderNotice } from "./runtime-reminder-persistence.js";
 import {
   AUTOMATION_MUTATION_TOOL_NAMES,
   evaluateRapidRefill,
@@ -121,9 +122,16 @@ export async function runRegularTurnLoop(
     finishTools();
     if (!outputTokenRecoveryActive && this.needsPlanModeExitReminder) {
       this.needsPlanModeExitReminder = false;
+      const planModeExitBody = buildPlanModeExitReminderBody();
       commitTurnRequestEntries(this, state.turnRequestState, [
-        systemReminderAttachmentEntry("plan_mode_exit", buildPlanModeExitReminderBody()),
+        systemReminderAttachmentEntry("plan_mode_exit", planModeExitBody),
       ]);
+      await persistRuntimeReminderNotice(
+        this,
+        "plan_mode_exit",
+        planModeExitBody,
+        state.turnTraceContext,
+      );
     }
     const runtimeModeReminderBody = outputTokenRecoveryActive
       ? null
@@ -136,6 +144,12 @@ export async function runRegularTurnLoop(
       commitTurnRequestEntries(this, state.turnRequestState, [
         systemReminderAttachmentEntry("runtime_mode", runtimeModeReminderBody),
       ]);
+      await persistRuntimeReminderNotice(
+        this,
+        "runtime_mode",
+        runtimeModeReminderBody,
+        state.turnTraceContext,
+      );
     }
     if (
       !outputTokenRecoveryActive &&
@@ -162,10 +176,17 @@ export async function runRegularTurnLoop(
         : null;
     if (outputStyleReminderBody) {
       // output_style 是 provider-visible 的当前 turn runtime attachment，
-      // 需要进入内存历史参与后续 request 的增量轨迹；但不把它落 session。
+      // 需要进入内存历史参与后续 request 的增量轨迹；同时以 runtime_reminder 落库，
+      // 否则冷恢复后 provider prefix 从首个 output_style 位置起分叉，prompt cache 整段失效。
       commitTurnRequestEntries(this, state.turnRequestState, [
         systemReminderAttachmentEntry("output_style", outputStyleReminderBody),
       ]);
+      await persistRuntimeReminderNotice(
+        this,
+        "output_style",
+        outputStyleReminderBody,
+        state.turnTraceContext,
+      );
     }
     const providerEntries = [...state.turnRequestState.entries];
     const requestEntries = providerEntries;

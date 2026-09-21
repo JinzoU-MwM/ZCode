@@ -256,9 +256,10 @@ export async function resumeFromStore(
     traceContext,
     options?.abortSignal,
   );
-  this.injectHookAdditionalContextIntoMessageHistory(
+  await this.injectHookAdditionalContextIntoMessageHistory(
     HookEventName.SessionStart,
     sessionStartHookResult.additionalContexts,
+    traceContext,
   );
 
   if (messages.length > 0 && activeMessages.length === 0) {

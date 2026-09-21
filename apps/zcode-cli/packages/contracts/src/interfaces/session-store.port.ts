@@ -64,6 +64,11 @@ export const SYNTHETIC_USER_MESSAGE_SOURCES = [
   // origin=real_user、kind=user_prompt，与其余「运行时注入的提醒」类来源不同档。
   "workflow_launch",
   "shared_context",
+  // 进程内只进内存历史的 runtime reminder（output_style / runtime_mode / plan_mode_exit /
+  // hook_context / model_anomaly）的落库载体。真实 reminder source 放在
+  // part.metadata.runtimeMessage.source，冷恢复按它还原为同一 attachment，保持 provider
+  // prefix 与恢复前逐字节一致，避免 prompt cache 在恢复后整段失效。
+  "runtime_reminder",
 ] as const;
 export type SyntheticUserMessageSource = (typeof SYNTHETIC_USER_MESSAGE_SOURCES)[number];
 

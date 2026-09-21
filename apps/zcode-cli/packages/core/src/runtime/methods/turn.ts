@@ -232,9 +232,10 @@ export async function executeTurnCommand(
         admittedModel,
       );
       completeTurnPhase("session_start_hooks", phaseStartedAt);
-      this.injectHookAdditionalContextIntoMessageHistory(
+      await this.injectHookAdditionalContextIntoMessageHistory(
         HookEventName.SessionStart,
         sessionStartHookResult.additionalContexts,
+        turnTraceContext,
       );
 
       if (compactInstructions !== null) {
@@ -417,9 +418,10 @@ export async function executeTurnCommand(
             projection,
           };
         }
-        this.injectHookAdditionalContextIntoMessageHistory(
+        await this.injectHookAdditionalContextIntoMessageHistory(
           HookEventName.UserPromptSubmit,
           userPromptHookResult.additionalContexts,
+          turnTraceContext,
         );
         injectReferencedSessionContextReminderIntoMessageHistory.call(this, input, options);
         injectDateChangeReminderIntoMessageHistory.call(this);

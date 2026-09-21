@@ -30,6 +30,8 @@ export const zcodeSyntheticUserMessageSourceSchema = z.enum([
   // SYNTHETIC_USER_MESSAGE_SOURCES 保持同一词表，否则 v3 mapper 收窄该 source 会 tsc 失败。
   "workflow_launch",
   "shared_context",
+  // 与 contracts SYNTHETIC_USER_MESSAGE_SOURCES 同步：内存态 runtime reminder 的落库载体。
+  "runtime_reminder",
 ]);
 export const zcodeWorkspaceRefSchema = z
   .object({

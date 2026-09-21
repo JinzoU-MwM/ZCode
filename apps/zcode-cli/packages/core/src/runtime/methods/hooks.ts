@@ -6,6 +6,7 @@ import {
   systemReminderAttachmentEntry,
   type RuntimeMessageEntry,
 } from "../../agent/message-history.js";
+import { persistRuntimeReminderNotice } from "./runtime-reminder-persistence.js";
 
 const MAX_STOP_HOOK_CONTINUATIONS = 3;
 
@@ -103,17 +104,23 @@ export async function runStopHooks(
   );
 }
 
-export function injectHookAdditionalContextIntoMessageHistory(
+export async function injectHookAdditionalContextIntoMessageHistory(
   this: AgentRuntimeInternal,
   eventName: HookEventNameType,
   additionalContexts: readonly string[],
-): RuntimeMessageEntry | undefined {
+  traceContext?: TraceContext,
+): Promise<RuntimeMessageEntry | undefined> {
   if (additionalContexts.length === 0) return undefined;
-  const entry = systemReminderAttachmentEntry(
-    "hook_context",
-    formatLifecycleHookAdditionalContextBody(eventName, additionalContexts),
-  );
+  const body = formatLifecycleHookAdditionalContextBody(eventName, additionalContexts);
+  const entry = systemReminderAttachmentEntry("hook_context", body);
   this.messageHistory.addEntries([entry]);
+  // 与内存历史同步落库；顺序由 DB sequence 决定，必须在后续消息落库前 await。
+  await persistRuntimeReminderNotice(
+    this,
+    "hook_context",
+    body,
+    traceContext ?? this.rootTraceContext,
+  );
   return entry;
 }
 

@@ -35,17 +35,19 @@ export const SYSTEM_REMINDER_PERSISTED_SOURCES = [
   "selection_side_chat",
   "queued_system_notification",
   "shell_environment_change",
-] as const;
-
-export const SYSTEM_REMINDER_PER_REQUEST_SOURCES = [
-  "incoming_message",
+  // 以下 reminder 进程内一直留在内存历史，现通过 `runtime_reminder` synthetic notice 落库，
+  // 冷恢复按原位还原，保持 provider prefix 与恢复前一致（prompt cache）。
   "hook_context",
   "runtime_mode",
   "plan_mode_exit",
   "output_style",
+  "model_anomaly",
+] as const;
+
+export const SYSTEM_REMINDER_PER_REQUEST_SOURCES = [
+  "incoming_message",
   "date_change",
   "referenced_session_context",
-  "model_anomaly",
   "prompt_attachment",
   "diagnostics",
 ] as const;

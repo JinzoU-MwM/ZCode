@@ -57,6 +57,7 @@ function mapUserInputOrigin(
     case "plugin_reference":
     case "rewind":
     case "todo_reminder":
+    case "runtime_reminder":
       return "synthetic";
     default:
       return "realUser";
