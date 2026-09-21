@@ -724,6 +724,8 @@ async function rebuildConversationDerivedState(
       ? latestAssistant.info.time.completed
       : undefined;
   this.messageHistory.setCacheMiss();
+  // 历史已被改写，下一次 request 的前缀比较应从头开始，避免误报 shrunk。
+  this.lastProviderRequestFingerprint = undefined;
   this.mainTurnCacheHitAggregate = mainTurnCacheHitAggregateFromMessages({
     activeMessages,
     persistedMessages: options.persistedMessages,

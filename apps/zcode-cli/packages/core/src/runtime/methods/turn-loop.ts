@@ -13,6 +13,8 @@ import {
   buildTodoReminderBody,
   buildRuntimeProviderRequestMessages,
   createCompactRapidRefillError,
+  diffRequestFingerprints,
+  fingerprintProviderRequest,
   throwIfTurnAborted,
   shouldBuildTodoReminder,
 } from "../helpers/index.js";
@@ -175,6 +177,18 @@ export async function runRegularTurnLoop(
       model: state.model,
     });
     const { messages } = providerProjection;
+    // prompt cache 诊断：与本 runtime 上一次 provider request 比较前缀，定位 miss 落点。
+    // 只写日志，不进入事件或协议。
+    const requestFingerprint = fingerprintProviderRequest({
+      messages,
+      tools,
+      sourceEntries: providerProjection.sourceEntries,
+    });
+    const prefixDivergence = diffRequestFingerprints(
+      this.lastProviderRequestFingerprint,
+      requestFingerprint,
+    );
+    this.lastProviderRequestFingerprint = requestFingerprint;
     const recordableEntries = filterOutputTokenContinuationEntries(requestEntries);
     const recordableProjection =
       recordableEntries === requestEntries
@@ -200,6 +214,7 @@ export async function runRegularTurnLoop(
       status: "started",
       messageCount: messages.length,
       iteration: state.toolCallCount === 0 ? 0 : Math.ceil(state.toolCallCount / 10),
+      prefix: prefixDivergence,
     });
 
     const result = await runModelBackedTurnStep.call(this, state, {

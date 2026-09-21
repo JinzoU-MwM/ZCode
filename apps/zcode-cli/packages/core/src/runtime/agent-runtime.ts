@@ -122,6 +122,7 @@ import type { AgentRuntimeInternal } from "./internal.js";
 import { InMemoryRuntimeTaskRegistry, type RuntimeTaskRegistry } from "../runtime-task/registry.js";
 import type { ChildClientPortsContext, ClientFacingPorts } from "./helpers/child-client-ports.js";
 import type { ProjectMemoryExtractionScheduler } from "./helpers/project-memory-extraction.js";
+import type { ProviderRequestFingerprint } from "./helpers/request-prefix-fingerprint.js";
 import { projectPersistentAgentMemoryTools } from "../subagent/persistent-memory.js";
 import { RuntimeTelemetryFacade } from "../telemetry/runtime-telemetry.js";
 import type { WorkspaceHookRuntimeAdmissionPort } from "../hooks/workspace-hook-runtime-admission.js";
@@ -197,6 +198,7 @@ export class AgentRuntime {
     totalCacheReadTokens: 0,
     totalCacheWriteTokens: 0,
   };
+  private lastProviderRequestFingerprint?: ProviderRequestFingerprint;
   private currentTurnFileChanges: RuntimeTurnFileChangeMap = new Map();
   private lastAssistantCompletedAtMs?: number;
   private lastEmittedLocalDate?: string;
