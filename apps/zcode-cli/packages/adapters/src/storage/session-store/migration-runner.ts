@@ -146,6 +146,11 @@ function* migrationSteps(
         );
       }
     });
+    // WAL 下 synchronous 默认仍是 FULL：每次 autocommit 都 fsync WAL。node:sqlite 是同步 API，
+    // 一个 turn 有几十次 message/part/event 落库，实测 ext4 上每次 7 ms，累计 300 ms+ 阻塞事件循环。
+    // NORMAL 只在 checkpoint 时 fsync；进程崩溃不丢已提交事务，仅断电时可能回退到最近 checkpoint，
+    // 这是 SQLite 官方推荐的 WAL 配置。实测每次落库降到 0.05 ms。该 PRAGMA 按连接生效，每次打开都设。
+    db.exec("pragma synchronous = normal");
     // 预检只决定展示；真正执行仍在拿锁后逐项核对，其他窗口完成后不会重复迁移。
     yield* acquire(() => {
       migrationFacts = {
