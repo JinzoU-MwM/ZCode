@@ -103,8 +103,6 @@ export interface AgentRuntimeInternal
   mcpToolsRegistered: boolean;
   subagentPort?: SubagentPort;
   dynamicWorkflowRunPort?: DynamicWorkflowRunPort;
-  /** 单向闩锁：项目有 workflow run 后，run 级工具才对 provider 可见。见 workflow-run-tools.ts。 */
-  workflowRunToolsUnlocked: boolean;
   modelCatalogPort?: ModelCatalogPort;
   runtimeTaskRegistry: RuntimeTaskRegistry;
   branchGeneration: number;
