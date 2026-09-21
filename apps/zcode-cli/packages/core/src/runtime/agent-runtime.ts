@@ -175,6 +175,7 @@ export class AgentRuntime {
   private mcpToolsRegistered = false;
   private subagentPort?: SubagentPort;
   private dynamicWorkflowRunPort?: DynamicWorkflowRunPort;
+  private workflowRunToolsUnlocked = false;
   private modelCatalogPort?: ModelCatalogPort;
   private runtimeTaskRegistry: RuntimeTaskRegistry;
   private branchGeneration = 0;
