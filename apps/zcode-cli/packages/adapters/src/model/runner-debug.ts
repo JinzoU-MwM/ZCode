@@ -7,6 +7,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { hash } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ModelTextResult } from "@zcode/contracts";
@@ -57,6 +58,8 @@ interface ModelIORequestCompactionState {
 
 interface ModelIOCompactionState {
   request?: ModelIORequestCompactionState;
+  /** 上一条记录写出的 body.tools 的 sha256；同 session 内工具表不变时后续记录只写引用。 */
+  toolsHash?: string;
 }
 
 const modelIOCompactionStates = new Map<string, ModelIOCompactionState>();
@@ -503,12 +506,15 @@ function writeModelIODebugRecord(
     const preparedRecord = prepareModelIORecordForWrite(sanitizedRecord, development);
     const previousState =
       fileExists && !resetForSizeLimit ? modelIOCompactionStates.get(filePath) : undefined;
-    const compacted = compactModelIORecord(preparedRecord, previousState, {
-      maxBaselineMessages: development
-        ? MAX_DEBUG_BASELINE_MESSAGES
-        : MAX_ROLLOUT_BASELINE_MESSAGES,
-      preserveFullBodyMessages: Boolean(preparedRecord.error),
-    });
+    const compacted = compactModelIOTools(
+      compactModelIORecord(preparedRecord, previousState, {
+        maxBaselineMessages: development
+          ? MAX_DEBUG_BASELINE_MESSAGES
+          : MAX_ROLLOUT_BASELINE_MESSAGES,
+        preserveFullBodyMessages: Boolean(preparedRecord.error),
+      }),
+      previousState,
+    );
     const recordToWrite = resetForSizeLimit
       ? {
           ...compacted,
@@ -643,6 +649,30 @@ function prepareProductionResponseRecord(
   // response.body 在生产排障里价值低于 text/toolCalls/usage/finishReason，且可能包含 provider 原始大包。
   delete next.body;
   return next;
+}
+
+// body.tools 是每条记录里最大的一块（实测 64 KB 记录里 51 KB 是工具表），且同一 session 内
+// 几乎从不变化。与 messages 的 delta 压缩同一思路：hash 不变时只写 `toolsRef`，读者按
+// 同文件最近一条带 `body.tools` 的记录还原。previousState 来自进程内缓存，不读文件。
+export function compactModelIOTools(
+  record: Record<string, unknown>,
+  previousState: ModelIOCompactionState | undefined,
+): Record<string, unknown> {
+  const request = asRecord(record.request);
+  const body = asRecord(request?.body);
+  if (!request || !body || !Array.isArray(body.tools)) {
+    return record;
+  }
+  const toolsHash = hash("sha256", JSON.stringify(body.tools), "hex");
+  if (toolsHash !== previousState?.toolsHash) {
+    return {
+      ...record,
+      request: { ...request, body: { ...body, toolsHash } },
+    };
+  }
+  const nextBody: Record<string, unknown> = { ...body, toolsRef: toolsHash };
+  delete nextBody.tools;
+  return { ...record, request: { ...request, body: nextBody } };
 }
 
 function compactModelIORecord(
@@ -782,8 +812,10 @@ function buildModelIOCompactionState(record: Record<string, unknown>): ModelIOCo
     return {};
   }
 
+  const tools = asRecord(request.body)?.tools;
   return {
     request: buildRequestCompactionState(request),
+    ...(Array.isArray(tools) ? { toolsHash: hash("sha256", JSON.stringify(tools), "hex") } : {}),
   };
 }
 
