@@ -33,6 +33,16 @@ import {
 // -----------------------------------------------
 
 const EPHEMERAL_CACHE_CONTROL = { type: "ephemeral" as const };
+// dynamic system 段里跨 workspace / session 不变的部分（只随安装版本变化）。
+// 它们单独成一个 system block 并排在易变段（memory 路径、env、output style、git 快照）之前，
+// 这样新 session / 新 workspace 的首个请求仍能命中到这里为止的 prompt cache 前缀。
+// Anthropic 会在 breakpoint 之前的 block 边界自动查找命中，因此不需要额外 marker；
+// AI SDK 只保留前 4 个 breakpoint，system 侧最多 3 个，才能给最新消息留一个。
+const INSTALL_STABLE_DYNAMIC_SOURCES: ReadonlySet<ContextSection["source"]> = new Set([
+  "dynamic_behavior",
+  "session_guidance",
+  "context_management",
+]);
 /** Skill 工具的注册名（与 tool/handlers/skill.ts 的 metadata.name 同字面；contracts 没有常量）。 */
 const SKILL_TOOL_NAME = "Skill";
 
@@ -236,10 +246,10 @@ export class ContextBuilder {
       ),
     );
     if (cliPrefixContent) {
+      // 只有十几个 token，不值一个 breakpoint；名额留给下面拆出的 dynamic block。
       messages.push({
         role: "system",
         content: cliPrefixContent,
-        cacheControl: EPHEMERAL_CACHE_CONTROL,
       });
     }
 
@@ -259,16 +269,21 @@ export class ContextBuilder {
       });
     }
 
-    const dynamicSystemContent = buildSectionContent(
-      sections.filter(
-        (section) => section.injectionTarget === "system" && section.cacheHint === "dynamic",
-      ),
+    const dynamicSections = sections.filter(
+      (section) => section.injectionTarget === "system" && section.cacheHint === "dynamic",
     );
-    if (dynamicSystemContent) {
+    // 两个 dynamic block 各自自带 "\n\n" 左边界；OpenAI-compatible 合并时按 "" 拼接，
+    // 拼出的文本与单个 block 完全相同，只是段落顺序按稳定度排列。
+    for (const group of [
+      dynamicSections.filter((section) => INSTALL_STABLE_DYNAMIC_SOURCES.has(section.source)),
+      dynamicSections.filter((section) => !INSTALL_STABLE_DYNAMIC_SOURCES.has(section.source)),
+    ]) {
+      const content = buildSectionContent(group);
+      if (!content) continue;
       messages.push({
         role: "system",
         // ZCode by design：Main Agent 的 dynamic system block 自带左边界，所有 provider 保持一致。
-        content: `\n\n${dynamicSystemContent}`,
+        content: `\n\n${content}`,
         cacheControl: EPHEMERAL_CACHE_CONTROL,
       });
     }
@@ -308,13 +323,16 @@ export class ContextBuilder {
 }
 
 function orderSectionsForInjection(sections: ContextSection[]): ContextSection[] {
+  const dynamicSystem = sections.filter(
+    (section) => section.injectionTarget === "system" && section.cacheHint === "dynamic",
+  );
   return [
     ...sections.filter(
       (section) => section.injectionTarget === "system" && section.cacheHint === "stable",
     ),
-    ...sections.filter(
-      (section) => section.injectionTarget === "system" && section.cacheHint === "dynamic",
-    ),
+    // 安装级稳定段先于 workspace / session 易变段，见 INSTALL_STABLE_DYNAMIC_SOURCES。
+    ...dynamicSystem.filter((section) => INSTALL_STABLE_DYNAMIC_SOURCES.has(section.source)),
+    ...dynamicSystem.filter((section) => !INSTALL_STABLE_DYNAMIC_SOURCES.has(section.source)),
     ...sections.filter(
       (section) => section.injectionTarget === "meta_user" && section.cacheHint === "stable",
     ),
