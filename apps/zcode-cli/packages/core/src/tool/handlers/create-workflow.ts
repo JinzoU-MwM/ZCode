@@ -106,6 +106,8 @@ const createWorkflowHandler: ToolHandler = async (input, context) => {
         ...formatWorkflowDiagnosticLines(diagnostics, location),
         "",
         diagnosticsNote(parsed, location, cwd),
+        // facade 与规则已不在描述里；编不过时把入口点出来，避免模型盲改再试。
+        "If a name or rule is unclear, call WorkflowReference for the facade declarations and authoring rules.",
       ].join("\n"),
       ...(causalityGraph === undefined ? {} : { causalityGraph }),
     } satisfies CreateWorkflowOutput;
