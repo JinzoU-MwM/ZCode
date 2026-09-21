@@ -1,7 +1,6 @@
 // Composed at module load from the dynamic-workflow facade so the model always
 // sees the current API surface — same construction as CreateWorkflow's description.
 
-import { FACADE_DTS } from "@zcode/dynamic-workflow";
 import { SAVED_WORKFLOW_GLOBAL_DIR, SAVED_WORKFLOW_PROJECT_DIR } from "@zcode/contracts";
 
 const INTRO = [
@@ -60,10 +59,9 @@ export const SAVE_WORKFLOW_TOOL_DESCRIPTION = [
   "",
   ARGS,
   "",
-  "The script is checked against these facade declarations:",
-  "```ts",
-  FACADE_DTS.trim(),
-  "```",
+  // facade 声明只在 CreateWorkflow 描述里出现一次：两个工具同一灰度门下总是同时注册，
+  // 这里重复一份约 5.6k token 会进入每一次 provider request 的前缀。
+  "The script is checked against the same facade declarations shown in the CreateWorkflow tool description; they are not repeated here.",
   "",
   RULES,
 ].join("\n");

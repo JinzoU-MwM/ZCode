@@ -1,8 +1,6 @@
-// Composed at module load from the snippet facade so the model always sees the
-// current API surface — the same constant the compiler is fed, so the contract in
-// this description can never drift from what typechecks
-
-import { SNIPPET_FACADE_DTS } from "@zcode/dynamic-workflow";
+// The snippet facade is the exact subset of the CreateWorkflow facade (args, log,
+// files.* / git.* world reads, world.run), so this description points at the
+// declarations shown there instead of repeating ~2k tokens in every request prefix.
 
 const INTRO = [
   "Compile and run a small dynamic-workflow TypeScript snippet synchronously, against the same compiler, sandbox, and world-read execution path a real workflow run uses.",
@@ -34,10 +32,7 @@ export const EVAL_WORKFLOW_SNIPPET_TOOL_DESCRIPTION = [
   "",
   WHEN_TO_USE,
   "",
-  "The snippet is checked against these facade declarations:",
-  "```ts",
-  SNIPPET_FACADE_DTS.trim(),
-  "```",
+  "The snippet is checked against a subset of the facade declarations shown in the CreateWorkflow tool description: only `args`, `log(...)`, the `files.*` and `git.*` world reads, and `world.run`. `agent`, `report`, `artifact` and `phase` do not exist here.",
   "",
   RULES,
 ].join("\n");
