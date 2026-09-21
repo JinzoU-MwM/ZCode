@@ -2,8 +2,10 @@
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
+// 命名导入在缺少该导出的旧 Node 上会在链接期直接报错；用命名空间导入 + 运行时探测。
+import * as nodeModule from "node:module";
 import { createServer } from "node:net";
-import { networkInterfaces } from "node:os";
+import { networkInterfaces, tmpdir, userInfo } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -12,6 +14,20 @@ const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8"
 const serverEntry = join(root, "server", "entry-http.js");
 const webRoot = join(root, "web");
 const agentEntry = join(root, "agent", "zcode.cjs");
+
+function enableAgentCompileCache() {
+  if (process.env.ZCODE_DISABLE_COMPILE_CACHE) return;
+  try {
+    if (typeof nodeModule.enableCompileCache !== "function") return;
+    const { uid } = userInfo();
+    const owner = typeof uid === "number" && uid >= 0 ? String(uid) : "u";
+    nodeModule.enableCompileCache(
+      join(tmpdir(), `zcode-compile-cache-${process.version}-${owner}`),
+    );
+  } catch {
+    // 缓存只是加速；任何失败都退回普通启动。
+  }
+}
 
 function usage() {
   return `Usage:
@@ -264,6 +280,10 @@ try {
     }
     // CLI 自启动子进程依赖 argv[1]；统一指向真正的 Agent 入口，保留 TTY 与所有原始参数。
     process.argv[1] = agentEntry;
+    // V8 编译缓存：agent/zcode.cjs 约 29 MB，每次冷启动都要重新 parse/compile（实测约
+    // 650 ms）。在 import 之前开启缓存，首跑写入、后续复用（实测约 410 ms）。必须从调用方
+    // 开启——bundle 自己调用无法缓存自身。目录按 Node 版本 + 用户隔离；失败静默不影响启动。
+    enableAgentCompileCache();
     await import(pathToFileURL(agentEntry).href);
   }
 } catch (error) {

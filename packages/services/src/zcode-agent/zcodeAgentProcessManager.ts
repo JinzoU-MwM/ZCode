@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir, userInfo } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { Emitter } from "@zcode/rpc";
 import {
@@ -180,6 +181,24 @@ if (coverageDirectory) {
   writeFileSync(resolve(coverageDirectory, \`coverage-ready-\${process.pid}.marker\`), "");
 }
 `;
+
+/**
+ * V8 编译缓存：agent 的 zcode.cjs 约 29 MB，每次 spawn 都要重新 parse/compile（实测冷启动
+ * 约 650 ms，命中缓存约 410 ms）。Node 22.1+ 读 NODE_COMPILE_CACHE 自动开启；旧运行时忽略
+ * 该变量。目录按 Node 版本 + 用户隔离，避免跨版本缓存互相污染。ZCODE_DISABLE_COMPILE_CACHE 可关闭。
+ */
+function buildAgentCompileCacheEnv(env: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  if (env.ZCODE_DISABLE_COMPILE_CACHE || env.NODE_COMPILE_CACHE) return {};
+  try {
+    const { uid } = userInfo();
+    const owner = typeof uid === "number" && uid >= 0 ? String(uid) : "u";
+    return {
+      NODE_COMPILE_CACHE: join(tmpdir(), `zcode-compile-cache-${process.version}-${owner}`),
+    };
+  } catch {
+    return {};
+  }
+}
 
 function buildE2EAgentCoverageEnv(env: NodeJS.ProcessEnv = process.env): Record<string, string> {
   const artifactDir = env.ZCODE_E2E_ARTIFACT_DIR?.trim();
@@ -1024,6 +1043,7 @@ export class ZCodeAgentProcessManager {
       env: {
         ...sanitizeZCodeRuntimeEnv(process.env),
         [ZCODE_RUNTIME_ENV_KEY]: runtimeEnv,
+        ...buildAgentCompileCacheEnv(),
         ...spawnEnv,
         ...effectiveCommand.env,
         // 身份/隔离语义使用 workspaceIdentity；cwd 继续使用 workspacePath。
