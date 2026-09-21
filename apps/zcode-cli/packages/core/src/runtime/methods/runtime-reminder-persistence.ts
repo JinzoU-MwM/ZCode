@@ -15,8 +15,32 @@ export async function persistRuntimeReminderNotice(
   body: string,
   traceContext: TraceContext,
 ): Promise<void> {
-  // 首轮延迟落库前没有 session 行；此时跳过，等价于旧行为（只影响首轮 SessionStart hook）。
-  if (!runtime.sessionPersisted) return;
+  // 首轮延迟落库前没有 session 行（SessionStart hook 早于 ensureSessionPersisted）。
+  // 先排队，session 行落下后按原顺序补写，仍早于首条 user prompt 的持久化，
+  // 因此 DB sequence 与内存历史的顺序一致。
+  if (!runtime.sessionPersisted) {
+    runtime.pendingRuntimeReminderNotices.push({ source, body, traceContext });
+    return;
+  }
+  await writeRuntimeReminderNotice(runtime, source, body, traceContext);
+}
+
+/** ensureSessionPersisted 置位后调用：按入队顺序补写首轮排队的 reminder。 */
+export async function flushPendingRuntimeReminderNotices(
+  runtime: AgentRuntimeInternal,
+): Promise<void> {
+  const pending = runtime.pendingRuntimeReminderNotices.splice(0);
+  for (const { source, body, traceContext } of pending) {
+    await writeRuntimeReminderNotice(runtime, source, body, traceContext);
+  }
+}
+
+async function writeRuntimeReminderNotice(
+  runtime: AgentRuntimeInternal,
+  source: SystemReminderSource,
+  body: string,
+  traceContext: TraceContext,
+): Promise<void> {
   await runtime.persistSyntheticUserNoticeForSession({
     messageID: createMessageId(),
     metadata: { runtimeMessage: systemReminderRuntimeMetadata(source) },

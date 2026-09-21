@@ -25,6 +25,7 @@ import { buildPersistedConversationInputIntent } from "./input-intent-persistenc
 import { recordToolUsageFromEvent } from "./usage-observability.js";
 import { persistSessionShellEnvironmentSnapshot } from "./session-shell-environment.js";
 import { persistRuntimeModelSelection } from "./turn-model.js";
+import { flushPendingRuntimeReminderNotices } from "./runtime-reminder-persistence.js";
 import {
   persistWorkspaceCheckpointEntry,
   persistWorkspaceFileRewindEntry,
@@ -613,6 +614,10 @@ export async function ensureSessionPersisted(
       buildExecutionStateEntry(this.sessionId, readRuntimeExecutionState(this)),
     );
     this.sessionPersisted = true;
+    // 首轮 SessionStart hook 等 reminder 在 session 行之前进入了内存历史；现在按原顺序补写，
+    // 仍早于首条 user prompt 落库，冷恢复后的 provider prefix 才与进程内一致。
+    phase = "session_pending_reminders";
+    await flushPendingRuntimeReminderNotices(this);
     this.logger?.debug("Session persisted", {
       ...traceContextToLogContext(traceContext),
       event: "session.persisted",

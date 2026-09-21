@@ -56,6 +56,31 @@ export function fingerprintProviderRequest(input: {
   };
 }
 
+/** 从持久化 entry 还原指纹；形状不对就当没有（诊断数据，宁缺毋错）。 */
+export function parseProviderRequestFingerprint(
+  value: unknown,
+): ProviderRequestFingerprint | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const record = value as Record<string, unknown>;
+  const isStringArray = (v: unknown): v is string[] =>
+    Array.isArray(v) && v.every((item) => typeof item === "string");
+  const isSourceArray = (v: unknown): v is (string | undefined)[] =>
+    Array.isArray(v) && v.every((item) => item === undefined || item === null || typeof item === "string");
+  if (
+    typeof record.toolsHash !== "string" ||
+    !isStringArray(record.messageHashes) ||
+    !isSourceArray(record.messageSources) ||
+    record.messageHashes.length !== record.messageSources.length
+  ) {
+    return undefined;
+  }
+  return {
+    toolsHash: record.toolsHash,
+    messageHashes: record.messageHashes,
+    messageSources: record.messageSources.map((item) => item ?? undefined),
+  };
+}
+
 export function diffRequestFingerprints(
   previous: ProviderRequestFingerprint | undefined,
   next: ProviderRequestFingerprint,

@@ -25,6 +25,7 @@ import {
 import type { AgentRuntimeInternal } from "../internal.js";
 import { runModelBackedTurnStep } from "./turn-model-step.js";
 import { persistRuntimeReminderNotice } from "./runtime-reminder-persistence.js";
+import { persistProviderRequestFingerprint } from "./provider-request-fingerprint-persistence.js";
 import {
   AUTOMATION_MUTATION_TOOL_NAMES,
   evaluateRapidRefill,
@@ -210,6 +211,9 @@ export async function runRegularTurnLoop(
       requestFingerprint,
     );
     this.lastProviderRequestFingerprint = requestFingerprint;
+    // 指纹落库（同 id 覆盖），冷恢复后首个请求的 prefix 诊断才能与恢复前比较，而不是一律 first。
+    // 诊断数据：写失败只记 warn，不影响请求。
+    await persistProviderRequestFingerprint(this, requestFingerprint, state.turnTraceContext);
     const recordableEntries = filterOutputTokenContinuationEntries(requestEntries);
     const recordableProjection =
       recordableEntries === requestEntries

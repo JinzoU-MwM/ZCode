@@ -813,6 +813,9 @@ export const SESSION_ENTRY_USER_INPUT_AUTO_RESOLUTION =
   "runtime/user_input_auto_resolution" as const;
 export const SESSION_ENTRY_WORKSPACE_CHECKPOINT = "runtime/workspace_checkpoint" as const;
 export const SESSION_ENTRY_WORKSPACE_FILE_REWIND = "runtime/workspace_file_rewind" as const;
+/** 上一次 provider request 的前缀指纹；冷恢复后让 prefix 诊断跨进程可比。仅诊断用。 */
+export const SESSION_ENTRY_PROVIDER_REQUEST_FINGERPRINT =
+  "runtime/provider_request_fingerprint" as const;
 
 export const SESSION_ENTRY_TYPES = [
   SESSION_ENTRY_TARGET_COMPLETION_VERIFICATION,
@@ -822,6 +825,7 @@ export const SESSION_ENTRY_TYPES = [
   SESSION_ENTRY_USER_INPUT_AUTO_RESOLUTION,
   SESSION_ENTRY_WORKSPACE_CHECKPOINT,
   SESSION_ENTRY_WORKSPACE_FILE_REWIND,
+  SESSION_ENTRY_PROVIDER_REQUEST_FINGERPRINT,
 ] as const;
 
 export type SessionEntryType = (typeof SESSION_ENTRY_TYPES)[number];

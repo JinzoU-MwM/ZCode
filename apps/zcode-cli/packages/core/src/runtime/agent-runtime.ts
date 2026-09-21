@@ -199,6 +199,8 @@ export class AgentRuntime {
     totalCacheWriteTokens: 0,
   };
   private lastProviderRequestFingerprint?: ProviderRequestFingerprint;
+  private pendingRuntimeReminderNotices: AgentRuntimeInternal["pendingRuntimeReminderNotices"] =
+    [];
   private currentTurnFileChanges: RuntimeTurnFileChangeMap = new Map();
   private lastAssistantCompletedAtMs?: number;
   private lastEmittedLocalDate?: string;

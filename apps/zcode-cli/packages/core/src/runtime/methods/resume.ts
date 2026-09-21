@@ -1,6 +1,7 @@
 import { restorePermissionGrantMarker } from "../helpers/permission-grant-resume.js";
 import { executionStateSchema, resolveExecutionState } from "@zcode/shared";
 import { SESSION_ENTRY_EXECUTION_STATE } from "@zcode/contracts";
+import { restoreProviderRequestFingerprint } from "./provider-request-fingerprint-persistence.js";
 import {
   CoreErrorType,
   HookEventName,
@@ -225,6 +226,8 @@ export async function resumeFromStore(
     (message) => message.info.role === "user" && !message.info.summary,
   ).length;
   this.sessionPersisted = true;
+  // 读回恢复前最后一次 provider request 指纹，让恢复后首个请求的 prefix 诊断跨进程可比。
+  await restoreProviderRequestFingerprint(this);
   await syncPersistedSessionTitleForResume.call(this, {
     restoredEvents,
     session,
