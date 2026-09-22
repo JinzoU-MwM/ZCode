@@ -213,14 +213,17 @@ Open `http://127.0.0.1:3030` to validate the complete flow, with one backend ser
 
 This fork ([JinzoU-MwM/ZCode](https://github.com/JinzoU-MwM/ZCode)) focuses on prompt-cache hit rate and runtime performance of the Agent CLI. None of the changes alter the tools the model sees or the interaction flow. Each one has a design note under [docs/superpowers/specs/](docs/superpowers/specs/).
 
-| Change                                                                 | Effect                                                                                           |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Prefix-divergence diagnostic on `model.request.started` logs           | Shows the first message index where a provider request stops matching the previous one           |
-| Runtime reminders persisted as `runtime_reminder` notices              | A cold resume sends the same prefix as the live process; measured 85-90% cache hits after resume |
-| System prompt sections ordered by cache stability                      | Install-stable guidance precedes workspace and session sections                                  |
-| Workflow facade declarations embedded once instead of three times      | About 17% fewer input tokens per request, identical model-visible content                        |
-| V8 compile cache enabled by the CLI runner and the Desktop agent spawn | Cold start of the 29 MB agent bundle 710 ms to 500 ms                                            |
-| Rollout model-io dumps write the tool table once per session           | Later records shrink from about 64 KB to 13 KB                                                   |
+| Change                                                                              | Effect                                                                                           |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Prefix-divergence diagnostic on `model.request.started` logs                        | Shows the first message index where a provider request stops matching the previous one           |
+| Runtime reminders persisted as `runtime_reminder` notices                           | A cold resume sends the same prefix as the live process; measured 85-90% cache hits after resume |
+| System prompt sections ordered by cache stability                                   | Install-stable guidance precedes workspace and session sections                                  |
+| Workflow facade declarations embedded once instead of three times                   | About 17% fewer input tokens per request, identical model-visible content                        |
+| V8 compile cache enabled by the CLI runner and the Desktop agent spawn              | Cold start of the 29 MB agent bundle 710 ms to 500 ms                                            |
+| Rollout model-io dumps write the tool table once per session                        | Later records shrink from about 64 KB to 13 KB                                                   |
+| SQLite session store runs `synchronous=NORMAL` under WAL                            | Per-write cost on ext4 from 7 ms to 0.05 ms; dozens of writes per turn no longer block the loop  |
+| Request fingerprint persisted per session                                           | The prefix diagnostic compares across processes, so a resume logs `append` instead of `first`    |
+| node:test suites for CommandInbox, projection store, compaction, request projection | `pnpm test` in core, adapters, bootstrap and ui; 54 cases                                        |
 
 ## Project Notice
 

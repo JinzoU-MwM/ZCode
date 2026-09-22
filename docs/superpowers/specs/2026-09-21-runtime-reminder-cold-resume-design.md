@@ -33,9 +33,9 @@ Call sites:
 
 `SYSTEM_REMINDER_PERSISTED_SOURCES` now lists these five sources so compaction bookkeeping counts them the same way it counts `todo_reminder`.
 
-### Known gap
+### First-turn SessionStart hook
 
-The SessionStart hook on the very first turn runs before `ensureSessionPersisted`. The helper skips the write when the session row does not exist yet, which is the old behaviour for that one case. Fix path: persist it right after `ensureSessionPersisted` with an explicit earlier sequence. Not done because it needs a store API change and affects only sessions whose SessionStart hook emits context.
+The SessionStart hook on the very first turn runs before `ensureSessionPersisted`, so there is no session row to write to yet. Closed in `2026-09-22-cross-process-prefix-diagnostic-design.md`: the helper queues such reminders and `ensureSessionPersisted` flushes them in order before the first user prompt is persisted.
 
 ## Testing
 
